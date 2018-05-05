@@ -1,5 +1,9 @@
 import Ajv from 'ajv';
 
+const HAS_MANY = 'HAS_MANY';
+const BELONGS_TO = 'BELONGS_TO';
+// const HAS_AND_BELONGS_TO_MANY = 'HAS_AND_BELONGS_TO_MANY';
+
 const modelRegistery = new Map();
 const ajv = new Ajv();
 
@@ -19,6 +23,29 @@ function validateModel(child) {
 
   // check for required definitions
   if (!child.tableName) showError('`tableName` is required');
+}
+
+function validateRelationships(child, registry) {
+  function showError(msg, name) {
+    const err = `Relationship failure, ${msg}: ${child.name}`;
+    if (name) throw new Error(`${err} (relation \`${name}\`)`);
+    throw new Error(err);
+  }
+
+  if (!child.relationships) showError('Model has no relationships defined');
+
+  // check relationship definitions
+  if (child.relationships) {
+    Object.keys(child.relationships).forEach(name => {
+      const def = child.relationships[name];
+
+      // only a limited number of relationship types are supported
+      if ([HAS_MANY, BELONGS_TO].indexOf(def.relation) < 0)
+        showError(`Invalid relation type \`${def.relation}\``, name);
+
+      if (!registry.has(def.model)) showError(`Model \`${def.model}\` not in registry`, name);
+    });
+  }
 }
 
 function execute(child, method, ...args) {
@@ -101,9 +128,56 @@ export default class BaseModel {
     return this.$knex(this.tableName);
   }
 
+  static queryWith(relations, registry = modelRegistery) {
+    /*
+    knex.select('*').from('users').join('accounts', {'accounts.id': 'users.account_id'})
+    Outputs:
+    select * from `users` inner join `accounts` on `accounts`.`id` = `users`.`account_id`
+    */
+
+    validateRelationships(this, registry);
+
+    return (Array.isArray(relations) ? relations : [relations]).reduce((query, relation) => {
+      const def = this.relationships[relation];
+      const leftModel = modelRegistery.get(def.model);
+
+      if (!def) {
+        throw new Error(`No relation defined from ${relation} in model ${this.name}`);
+      }
+
+      const joinFn = joinMap[def.type || 'inner'];
+
+      if (def.relation === HAS_MANY) {
+        const left = `${leftModel.tableName}.${def.remote}`;
+        const right = `${this.tableName}.${def.local || this.primaryKey}`;
+        return query[joinFn](leftModel.tableName, { [left]: right });
+      }
+
+      if (def.relation === BELONGS_TO) {
+        const left = `${this.tableName}.${def.local}`;
+        const right = `${leftModel.tableName}.${def.remote || leftModel.primaryKey}`;
+        return query[joinFn](leftModel.tableName, { [left]: right });
+      }
+
+      throw new Error(`Unsupported relation type: ${def.relation}`);
+    }, this.query());
+  }
+
   static async byId(id, ...fields) {
     return this.query()
       .where({ [this.primaryKey]: id })
       .first(...fields);
   }
+
+  static get hasMany() {
+    return HAS_MANY;
+  }
+
+  static get belongsTo() {
+    return BELONGS_TO;
+  }
+
+  // static get hasAndBelongsToMany() {
+  //   return HAS_AND_BELONGS_TO_MANY;
+  // }
 }
