@@ -51,9 +51,11 @@
     "cjs": true
   },
   "dependencies": {
+    "ajv": "^6.4.0",
     "esm": "^3.0.17"
   },
   "peerDependenies": {
+    "knex": "^0.14.0"
   },
   "devDependencies": {
     "auto-authors": "^0.1.1",
