@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 
+const modelRegistery = new Map();
 const ajv = new Ajv();
-// const modelRegistery = new Map(); // TODO: mapping relationships
 
 function defineProp(obj, prop, config = {}) {
   Object.defineProperty(obj, prop, {
@@ -17,6 +17,7 @@ function validateModel(child) {
     throw new Error(`Model failure, ${msg}: ${child.name}`);
   }
 
+  // check for required definitions
   if (!child.tableName) showError('`tableName` is required');
 }
 
@@ -25,18 +26,32 @@ function execute(child, method, ...args) {
   return null;
 }
 
+const joinMap = {
+  inner: 'innerJoin',
+  left: 'leftJoin',
+  leftOuter: 'leftOuterJoin',
+  right: 'rightJoin',
+  rightOuter: 'rightOuterJoin',
+  fullOuter: 'fullOuterJoin',
+  cross: 'crossJoin',
+};
+
 export default class BaseModel {
   constructor(doc = {}) {
+    // validate model configuration
     validateModel(this.constructor);
-    // modelRegistery.set(this.constructor.name, this.constructor); // TODO: mapping relationships
+
+    // register local properties
     defineProp(this, '$knex', { value: this.constructor.$knex });
 
+    // keep the doc instance
     this.doc = doc;
 
     execute(this.constructor, 'onCreate', this.doc);
   }
 
   get primaryKey() {
+    // default primary key
     return this.constructor.primaryKey || 'id';
   }
 
@@ -74,6 +89,12 @@ export default class BaseModel {
 
   static get primaryKey() {
     return 'id';
+  }
+
+  static register(registry = modelRegistery) {
+    // keep track of the model
+    if (registry.has(this.name)) throw new Error(`Model already registered: ${this.name}`);
+    registry.set(this.name, this);
   }
 
   static query() {
