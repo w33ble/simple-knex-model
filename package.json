@@ -1,0 +1,72 @@
+{
+  "name": "simple-knex-model",
+  "version": "0.0.0",
+  "description": "A simple model for knex queries",
+  "main": "index",
+  "module": "index.mjs",
+  "scripts": {
+    "lint": "eslint \"*.{js,mjs}\" \"src/**/*.{js,mjs}\"",
+    "precommit": "lint-staged",
+    "version": "auto-changelog -p && auto-authors && git add CHANGELOG.md AUTHORS.md",
+    "start": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/w33ble/simple-knex-model.git"
+  },
+  "keywords": [],
+  "files": [
+    "src/",
+    "index.js",
+    "index.mjs",
+    "CHANGELOG.md",
+    "AUTHORS.md"
+  ],
+  "author": "Joe Fleming (https://github.com/w33ble)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/w33ble/simple-knex-model/issues"
+  },
+  "homepage": "https://github.com/w33ble/simple-knex-model",
+  "auto-changelog": {
+    "output": "CHANGELOG.md",
+    "template": ".changelog_template.hbs",
+    "ignoreCommitPattern": "(chore|test):",
+    "commitLimit": false
+  },
+  "lint-staged": {
+    "*.{js,mjs}": [
+      "eslint --fix"
+    ],
+    "*.{js,mjs,json,css}": [
+      "prettier --write"
+    ]
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "esm": {
+    "cjs": true
+  },
+  "dependencies": {
+    "esm": "^3.0.17"
+  },
+  "peerDependenies": {
+  },
+  "devDependencies": {
+    "auto-authors": "^0.1.1",
+    "auto-changelog": "^1.4.6",
+    "eslint": "^4.9.0",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "eslint-plugin-prettier": "^2.3.1",
+    "eslint-plugin-react": "^7.1.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^7.0.4",
+    "prettier": "^1.9.0"
+  }
+}

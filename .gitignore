@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+yarn-error.log
+yarn.lock
+.DS_Store
+.*.swp
+.env
+coverage
+.nyc_output
+coverage.lcov
+/lib
