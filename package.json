@@ -14,7 +14,22 @@
     "type": "git",
     "url": "git+https://github.com/w33ble/simple-knex-model.git"
   },
-  "keywords": [],
+  "keywords": [
+    "knex",
+    "sql",
+    "query",
+    "query builder",
+    "model",
+    "orm",
+    "mysql",
+    "postgresql",
+    "mariadb",
+    "sqlite3",
+    "schema",
+    "validator",
+    "validation",
+    "json-schema"
+  ],
   "files": [
     "src/",
     "index.js",
