@@ -20,6 +20,11 @@ function validateModel(child) {
   if (!child.tableName) showError('`tableName` is required');
 }
 
+function execute(child, method, ...args) {
+  if (typeof child[method] === 'function') return child[method](...args);
+  return null;
+}
+
 export default class BaseModel {
   constructor(doc = {}) {
     validateModel(this.constructor);
@@ -27,6 +32,8 @@ export default class BaseModel {
     defineProp(this, '$knex', { value: this.constructor.$knex });
 
     this.doc = doc;
+
+    execute(this.constructor, 'onCreate', this.doc);
   }
 
   get primaryKey() {
@@ -34,7 +41,9 @@ export default class BaseModel {
   }
 
   async save() {
-    const schema = this.constructor.jsonSchema;
+    const jsonSchema = this.constructor.jsonSchema; // eslint-disable-line prefer-destructuring
+    const modifiedSchema = execute(this.constructor, 'beforeValidate', { ...jsonSchema }, this.doc);
+    const schema = modifiedSchema || jsonSchema;
 
     if (schema) {
       const validate = ajv.compile(schema);
@@ -48,6 +57,8 @@ export default class BaseModel {
         );
       }
     }
+
+    execute(this.constructor, 'beforeSave', this.doc);
 
     await this.$knex(this.constructor.tableName).insert(this.doc);
 
