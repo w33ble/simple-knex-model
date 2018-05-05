@@ -10,8 +10,8 @@ A simple model for knex queries.
 
 - ✅ Fully es6 module compatilble
 - ✅ Schema validation using [ajv](https://www.npmjs.com/package/ajv)
+- ✅ [Extensible via hooks](#user-content-adding-functionality)
 - ⁉️ Model registry for relationships, no circular dependencies
-- ⁉️ Pluggable
 
 Inspired a bit by [objection](https://www.npmjs.com/package/objection), but with *way* less features. On the plus side, it works with es6 modules.
 
@@ -84,6 +84,76 @@ Fetches a record by id from the database. Returns a Promise that resolves to the
 #### `Model.query()`
 
 Returns an instance of `knex`, with the table name already applied. Use this to execute any of the normal `knex` operations.
+
+## Adding Functionality
+
+`simple-knex-model` provides 3 hooks which can be used to modify data on the fly. You can use that to create your own custom base model, or even to write plugins. For example, let's say you want to apply a custom id to documents, via uuid or some other method, you can use the `onCreate` hook to do just that.
+
+```js
+import BaseModel from 'simple-knex-model';
+import crypto from 'crypto';
+
+const rand = len => crypto.randomBytes(Math.ceil(len / 2)).toString('hex').slice(0, len);
+
+class User extends BaseModel {
+  static get tableName() {
+    return 'users';
+  }
+
+  static onCreate(doc) {
+    doc.id = rand(12);
+  }
+}
+
+const user = new User({ email: 'user@email.co' }); 
+console.log(user); // { id: 'daa92600af5d', email: 'user@email.co' }
+```
+
+Now every User document you create will have a random id. You could plug any GUID/UUID functionality you want in here. You can also take this idea further and create your own custom base class that adds this functionality to every model that extends it.
+
+```js
+import BaseModel from 'simple-knex-model';
+import crypto from 'crypto';
+
+const rand = len => crypto.randomBytes(Math.ceil(len / 2)).toString('hex').slice(0, len);
+
+class CustomModel extends BaseModel {
+  static onCreate(doc) {
+    doc.id = rand(12);
+  }
+}
+
+class User extends CustomModel {
+  static get tableName() {
+    return 'users';
+  }
+}
+
+class Post extends CustomModel {
+  static get tableName() {
+    return 'posts';
+  }
+}
+
+const user = new User({ email: 'user@email.co' }); 
+const post = new Post({ title: 'Hello World' });
+console.log(user); // { id: 'b8919bf858ab', email: 'user@email.co' }
+console.log(post): // { id: 'f624c9ad373c', title: 'Hello World' }
+```
+
+### Hooks
+
+#### `onCreate(doc)`
+
+Called when a new instance of the model is created. The `doc` object is passed by reference and can be mutated directly.
+
+#### `beforeValidate(jsonSchema, doc)`
+
+Called before the doc is validated against the defined schema. `jsonSchema` is a shallow clone of the schema defined on the model, and anything returned from this function will be used as the new schema. The `doc` object is passed by reference and can be mutated directly.
+
+#### `beforeSave(doc)`
+
+Called after the validation but before the document is written to the database. The `doc` object is passed by reference and can be mutated directly.
 
 #### License
 
