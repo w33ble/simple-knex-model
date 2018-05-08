@@ -2,7 +2,7 @@ import Ajv from 'ajv';
 
 const HAS_MANY = 'HAS_MANY';
 const BELONGS_TO = 'BELONGS_TO';
-// const HAS_AND_BELONGS_TO_MANY = 'HAS_AND_BELONGS_TO_MANY';
+const HAS_AND_BELONGS_TO_MANY = 'HAS_AND_BELONGS_TO_MANY';
 
 const modelRegistery = new Map();
 const ajv = new Ajv();
@@ -22,10 +22,13 @@ const relationshipSchema = {
   required: ['model'],
   properties: {
     model: { type: 'string' },
-    relation: { type: 'string', enum: [HAS_MANY, BELONGS_TO] },
+    relation: { type: 'string', enum: [HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY] },
     joinType: { type: 'string', enum: Object.keys(joinMap) },
     local: { type: 'string' },
     remote: { type: 'string' },
+    joinTable: { type: 'string' },
+    joinLocal: { type: 'string' },
+    joinRemote: { type: 'string' },
   },
 };
 
@@ -93,7 +96,7 @@ export default class BaseModel {
       }
 
       // only a limited number of relationship types are supported
-      if ([HAS_MANY, BELONGS_TO].indexOf(def.relation) < 0) {
+      if ([HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY].indexOf(def.relation) < 0) {
         showError(`Invalid relation for \`${name}\`, \`${def.relation}\` `);
       }
 
@@ -121,9 +124,9 @@ export default class BaseModel {
     return BELONGS_TO;
   }
 
-  // static get hasAndBelongsToMany() {
-  //   return HAS_AND_BELONGS_TO_MANY;
-  // }
+  static get belongsToMany() {
+    return HAS_AND_BELONGS_TO_MANY;
+  }
 
   static register(registry = modelRegistery) {
     // use optional external registry
@@ -150,24 +153,37 @@ export default class BaseModel {
 
     return (Array.isArray(relations) ? relations : [relations]).reduce((query, relation) => {
       const def = this.relationships[relation];
-      const leftModel = modelRegistery.get(def.model);
+      const remoteModel = modelRegistery.get(def.model);
 
       if (!def) {
         throw new Error(`No relation defined from ${relation} in model ${this.name}`);
       }
 
-      const joinFn = joinMap[def.type || 'inner'];
+      const joinFn = joinMap[def.joinType || 'inner'];
 
       if (def.relation === HAS_MANY) {
-        const left = `${leftModel.tableName}.${def.remote}`;
+        // TODO: check that remote is defined in validateRelationships
+        const left = `${remoteModel.tableName}.${def.remote}`;
         const right = `${this.tableName}.${def.local || this.primaryKey}`;
-        return query[joinFn](leftModel.tableName, { [left]: right });
+        return query[joinFn](remoteModel.tableName, { [left]: right });
       }
 
       if (def.relation === BELONGS_TO) {
+        // TODO: check that local is defined in validateRelationships
         const left = `${this.tableName}.${def.local}`;
-        const right = `${leftModel.tableName}.${def.remote || leftModel.primaryKey}`;
-        return query[joinFn](leftModel.tableName, { [left]: right });
+        const right = `${remoteModel.tableName}.${def.remote || remoteModel.primaryKey}`;
+        return query[joinFn](remoteModel.tableName, { [left]: right });
+      }
+
+      if (def.relation === HAS_AND_BELONGS_TO_MANY) {
+        // TODO: check that joinTable, joinLocal, and joinRemote are defined in validateRelationships
+        const left = `${this.tableName}.${def.local || this.primaryKey}`;
+        const leftJoin = `${def.joinTable}.${def.joinLocal}`;
+        const right = `${remoteModel.tableName}.${def.remote || remoteModel.primaryKey}`;
+        const rightJoin = `${def.joinTable}.${def.joinRemote}`;
+        return query[joinFn](def.joinTable, { [left]: leftJoin })[joinFn](remoteModel.tableName, {
+          [right]: rightJoin,
+        });
       }
 
       throw new Error(`Unsupported relation type: ${def.relation}`);
@@ -181,7 +197,7 @@ export default class BaseModel {
   }
 
   async save() {
-    const { jsonSchema } = this.constructor;
+    const { jsonSchema, tableName, primaryKey } = this.constructor;
 
     const modifiedSchema = executeOnDef(
       this.constructor,
@@ -204,10 +220,10 @@ export default class BaseModel {
 
     executeOnDef(this.constructor, 'beforeSave', this.doc);
 
-    await this.$knex(this.tableName).insert(this.doc);
+    await this.$knex(tableName).insert(this.doc);
 
-    return this.$knex(this.tableName)
-      .where({ [this.primaryKey]: this.doc[this.primaryKey] })
+    return this.$knex(tableName)
+      .where({ [primaryKey]: this.doc[primaryKey] })
       .first();
   }
 }
