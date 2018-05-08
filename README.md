@@ -8,10 +8,10 @@ A simple model for knex queries.
 
 ## Features
 
-- ✅ Fully es6 module compatilble
+- ✅ Fully es6 module compatible
 - ✅ Schema validation using [ajv](https://www.npmjs.com/package/ajv)
 - ✅ [Extensible via hooks](#user-content-adding-functionality)
-- ⁉️ Model registry for relationships, no circular dependencies
+- ✅ Model registry for relationships, no circular dependencies
 
 Inspired a bit by [objection](https://www.npmjs.com/package/objection), but with *way* less features. On the plus side, it works with es6 modules.
 
@@ -65,7 +65,7 @@ export default class User extends BaseModel {
 
 If you provide a `jsonSchema`, documents will be validated with it before they are saved.
 
-### API
+## API
 
 `Model` here is your model, which extends `BaseModel` (simple-knex-model);
 
@@ -84,6 +84,94 @@ Fetches a record by id from the database. Returns a Promise that resolves to the
 #### `Model.query()`
 
 Returns an instance of `knex`, with the table name already applied. Use this to execute any of the normal `knex` operations.
+
+#### `Model.queryWith(relations)`
+
+`relations` is either a key from the relationships object or an array of said keys. Returns an instance of `knex`, with the table name already applied and the related join queries applied. Use this to execute any of the normal `knex` operations with your defined joins.
+
+## Relationships
+
+Basic relationships are supported, using `BaseModel.hasMany`, `BaseModel.belongsTo`, and `BaseModel.belongsToMany`. The naming should be pretty self-explanatory, but there is plenty of information around that explains how it works. Here's a quick example:
+
+```js
+import BaseModel from 'simple-knex-model';
+
+class Chef extends BaseModel {
+  static get tableName() {
+    return 'chefs';
+  }
+
+  static get relationships() {
+    return {
+      recipes: {
+        model: 'Recipe',
+        relation: BaseModel.hasMany,
+        remote: 'chef_id',
+      }
+    };
+  }
+}
+
+class Recipe extends BaseModel {
+  static get tableName() {
+    return 'recipes';
+  }
+
+  static get relationships() {
+    return {
+      chef: {
+        model: 'Chef',
+        relation: BaseModel.belongsTo,
+        local: 'chef_id',
+      }
+    };
+  }
+}
+
+// get all recipes and include the chef's name in the joined results
+await results = Recipe.queryWith('recipes').select('chefs.name as chef', 'recipes.*');
+```
+
+Here's the breakdown of the options for each. If you need something more complex, you'll have to craft if by hand directly from the `knex` instance.
+
+#### `BaseModel.hasMany`
+
+Owner model has many child models
+
+property | default | description
+-------- | ------- | ----------- 
+model | | `string` - Model name to join with
+relation | | `BaseModel.hasMany` - The model relationship type
+joinType | `inner` | `string` - The join type to use (inner, left, right, leftOuter, rightOuter, fullOuter, cross)
+local | primaryKey | `string` - The local field to join with
+remote | | `string` - The remote field to join with
+
+#### `BaseModel.belongsTo`
+
+Owner model belongs to child model
+
+property | default | description
+-------- | ------- | ----------- 
+model | | `string` - Model name to join with
+relation | | `BaseModel.belongsTo` - The model relationship type
+joinType | `inner` | `string` - The join type to use (inner, left, right, leftOuter, rightOuter, fullOuter, cross)
+local | | `string` - The local field to join with
+remote | primaryKey | `string` - The remote field to join with
+
+#### `BaseModel.belongsToMany`
+
+Owner model has and belongs to many child models, coordinated through a join table
+
+property | default | description
+-------- | ------- | ----------- 
+model | | `string` - Model name to join with
+relation | | `BaseModel.belongsToMany` - The model relationship type
+joinType | `inner` | `string` - The join type to use (inner, left, right, leftOuter, rightOuter, fullOuter, cross)
+joinTable | | `string` - Table join table to use
+local | primaryKey | `string` - The local field to join with
+joinLocal | | `string` - The field in the join table to match on the local field
+remote | primaryKey | `string` - The remote field to join with
+joinRemote | | `string` - The field in the join table to match on the remote field
 
 ## Adding Functionality
 
@@ -141,7 +229,7 @@ console.log(user); // { id: 'b8919bf858ab', email: 'user@email.co' }
 console.log(post): // { id: 'f624c9ad373c', title: 'Hello World' }
 ```
 
-### Hooks
+## Hooks
 
 #### `onCreate(doc)`
 
