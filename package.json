@@ -1,6 +1,6 @@
 {
   "name": "simple-knex-model",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A simple model for knex queries",
   "main": "index",
   "module": "index.mjs",
