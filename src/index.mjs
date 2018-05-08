@@ -1,9 +1,6 @@
 import Ajv from 'ajv';
 import { defineProp, executeOnDef } from './utils.mjs';
-
-const HAS_MANY = 'HAS_MANY';
-const BELONGS_TO = 'BELONGS_TO';
-const HAS_AND_BELONGS_TO_MANY = 'HAS_AND_BELONGS_TO_MANY';
+import { HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
 
 const modelRegistery = new Map();
 const ajv = new Ajv();
