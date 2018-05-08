@@ -1,4 +1,5 @@
 import Ajv from 'ajv';
+import { defineProp, executeOnDef } from './utils.mjs';
 
 const HAS_MANY = 'HAS_MANY';
 const BELONGS_TO = 'BELONGS_TO';
@@ -31,20 +32,6 @@ const relationshipSchema = {
     joinRemote: { type: 'string' },
   },
 };
-
-function defineProp(obj, prop, config = {}) {
-  Object.defineProperty(obj, prop, {
-    enumerable: false,
-    writable: false,
-    configurable: false,
-    ...config,
-  });
-}
-
-function executeOnDef(child, method, ...args) {
-  if (typeof child[method] === 'function') return child[method](...args);
-  return null;
-}
 
 export default class BaseModel {
   constructor(doc) {
@@ -142,14 +129,8 @@ export default class BaseModel {
   }
 
   static queryWith(relations) {
-    /*
-    knex.select('*').from('users').join('accounts', {'accounts.id': 'users.account_id'})
-    Outputs:
-    select * from `users` inner join `accounts` on `accounts`.`id` = `users`.`account_id`
-    */
-
-    if (!this.validRelationshipSchema) this.validateRelationships();
-    this.validRelationshipSchema = true;
+    if (!this.$validRelationshipSchema) this.validateRelationships();
+    defineProp(this, '$validateRelationships', { value: true });
 
     return (Array.isArray(relations) ? relations : [relations]).reduce((query, relation) => {
       const def = this.relationships[relation];
