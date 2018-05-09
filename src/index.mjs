@@ -168,10 +168,10 @@ export default class BaseModel {
     }, this.query());
   }
 
-  static async byId(id, ...fields) {
+  static async byId(id) {
     return this.query()
       .where({ [this.primaryKey]: id })
-      .first(...fields);
+      .first();
   }
 
   async save() {

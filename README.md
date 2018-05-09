@@ -78,9 +78,9 @@ Creates a new instance of the model, ready to be saved. Document is an object.
 
 Inserts the document into the database. Returns a promise. If `jsonSchema` is defined on the model, it will be used to validate the document before saving, and the Promise will reject if the validation fails.
 
-#### `Model.byId(id, ...fields)`
+#### `Model.byId(id)`
 
-Fetches a record by id from the database. Returns a Promise that resolves to the single matching record. If fields are provided, only those fields will be returned, otherwise all fields will be returned.
+Fetches a record by id from the database. Returns a Promise that resolves to the single matching record.
 
 #### `Model.query()`
 
