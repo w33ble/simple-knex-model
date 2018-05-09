@@ -1,5 +1,5 @@
 import Ajv from 'ajv';
-import { defineProp, executeOnDef } from './utils.mjs';
+import { defineProp, executeOnDef, getJoinQuery } from './utils.mjs';
 import { HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
 
 const modelRegistery = new Map();
@@ -139,32 +139,7 @@ export default class BaseModel {
 
       const joinFn = joinMap[def.joinType || 'inner'];
 
-      if (def.relation === HAS_MANY) {
-        // TODO: check that remote is defined in validateRelationships
-        const left = `${remoteModel.tableName}.${def.remote}`;
-        const right = `${this.tableName}.${def.local || this.primaryKey}`;
-        return query[joinFn](remoteModel.tableName, { [left]: right });
-      }
-
-      if (def.relation === BELONGS_TO) {
-        // TODO: check that local is defined in validateRelationships
-        const left = `${this.tableName}.${def.local}`;
-        const right = `${remoteModel.tableName}.${def.remote || remoteModel.primaryKey}`;
-        return query[joinFn](remoteModel.tableName, { [left]: right });
-      }
-
-      if (def.relation === HAS_AND_BELONGS_TO_MANY) {
-        // TODO: check that joinTable, joinLocal, and joinRemote are defined in validateRelationships
-        const left = `${this.tableName}.${def.local || this.primaryKey}`;
-        const leftJoin = `${def.joinTable}.${def.joinLocal}`;
-        const right = `${remoteModel.tableName}.${def.remote || remoteModel.primaryKey}`;
-        const rightJoin = `${def.joinTable}.${def.joinRemote}`;
-        return query[joinFn](def.joinTable, { [left]: leftJoin })[joinFn](remoteModel.tableName, {
-          [right]: rightJoin,
-        });
-      }
-
-      throw new Error(`Unsupported relation type: ${def.relation}`);
+      return getJoinQuery({ query, joinFn, def, remoteModel, localModel: this });
     }, this.query());
   }
 
