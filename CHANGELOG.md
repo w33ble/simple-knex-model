@@ -1,5 +1,8 @@
 ### Changelog
 
+#### [v0.2.1](https://github.com/w33ble/simple-knex-model/compare/v0.2.0...v0.2.1) (10 May 2018)
+- feat: add validate method [`16a9eb1`](https://github.com/w33ble/simple-knex-model/commit/16a9eb13287bfdf8265c68b4b5cd0de6ed3b4198)
+
 #### [v0.2.0](https://github.com/w33ble/simple-knex-model/compare/v0.1.0...v0.2.0) (10 May 2018)
 - feat: add queryById, remove byId [`ede3e33`](https://github.com/w33ble/simple-knex-model/commit/ede3e332d1ffce7bbd7c5e8f051f57d0b2de899e)
 - feat: remove fields arg from byId [`661f5da`](https://github.com/w33ble/simple-knex-model/commit/661f5da217c52de8a25e1391b79005bf7f0a9aa0)
