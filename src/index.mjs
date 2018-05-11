@@ -147,25 +147,30 @@ export default class BaseModel {
     }, this.query());
   }
 
-  async save() {
-    const { jsonSchema, tableName, primaryKey } = this.constructor;
+  static validate(data, schema) {
+    const checkSchema = schema || this.jsonSchema;
 
-    const modifiedSchema = executeOnDef(
-      this.constructor,
-      'beforeValidate',
-      { ...jsonSchema },
-      this.doc
-    );
-    const schema = modifiedSchema || jsonSchema;
+    if (!ajv.validate({ ...checkSchema, type: 'object' }, data)) {
+      return { valid: false, errors: ajv.errors };
+    }
+
+    return { valid: true, errors: [] };
+  }
+
+  async save() {
+    const { jsonSchema, tableName, primaryKey, validate } = this.constructor;
+
+    const schema =
+      executeOnDef(this.constructor, 'beforeValidate', { ...jsonSchema }, this.doc) || jsonSchema;
 
     if (schema) {
-      const validate = ajv.compile({ ...schema, type: 'object' });
-      const valid = validate(this.doc);
+      const { valid, errors } = validate(this.doc, { ...schema, type: 'object' });
+
       if (!valid) {
-        const { dataPath } = validate.errors[0];
+        const { dataPath, message } = errors[0];
         const path = dataPath.length ? `\`${dataPath.replace(/^\./, '')}\` ` : '';
 
-        throw new Error(`document ${path}${validate.errors[0].message.replace(/'/g, '`')}`);
+        throw new Error(`document ${path}${message.replace(/'/g, '`')}`);
       }
     }
 
