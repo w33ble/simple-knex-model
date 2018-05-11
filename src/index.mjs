@@ -125,6 +125,10 @@ export default class BaseModel {
     return this.$knex(this.tableName);
   }
 
+  static queryById(id) {
+    return this.query().where({ [this.primaryKey]: id });
+  }
+
   static queryWith(relations) {
     if (!this.$validRelationshipSchema) this.validateRelationships();
     defineProp(this, '$validateRelationships', { value: true });
@@ -141,12 +145,6 @@ export default class BaseModel {
 
       return getJoinQuery({ query, joinFn, def, remoteModel, localModel: this });
     }, this.query());
-  }
-
-  static async byId(id) {
-    return this.query()
-      .where({ [this.primaryKey]: id })
-      .first();
   }
 
   async save() {

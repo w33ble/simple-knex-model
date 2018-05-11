@@ -78,13 +78,13 @@ Creates a new instance of the model, ready to be saved. Document is an object.
 
 Inserts the document into the database. Returns a promise. If `jsonSchema` is defined on the model, it will be used to validate the document before saving, and the Promise will reject if the validation fails.
 
-#### `Model.byId(id)`
-
-Fetches a record by id from the database. Returns a Promise that resolves to the single matching record.
-
 #### `Model.query()`
 
 Returns an instance of `knex`, with the table name already applied. Use this to execute any of the normal `knex` operations.
+
+#### `Model.queryById(id)`
+
+Returns an instance of `knex`, with the table name already applied and a where on the primary key for the provided id. Use this to execute any of the normal `knex` operations on documents with a given id. Most useful when used with [`.first()`](http://knexjs.org/#Builder-first).
 
 #### `Model.queryWith(relations)`
 
