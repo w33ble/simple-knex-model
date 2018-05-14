@@ -57,6 +57,9 @@ export default class BaseModel {
     };
 
     // check for required definitions
+    if (!/^[A-Z]/.test(this.name)) addError('Model class name should be capitalized');
+    if (!/^[a-z]+$/i.test(this.name)) addError('Model class name should only contain letters');
+
     if (!this.tableName) addError('`tableName` is required');
 
     return result;
