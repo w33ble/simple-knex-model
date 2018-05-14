@@ -5,7 +5,7 @@
   "main": "index",
   "module": "index.mjs",
   "scripts": {
-    "lint": "eslint \"*.{js,mjs}\" \"src/**/*.{js,mjs}\"",
+    "lint": "eslint '*.{js,mjs}' 'src/**/*.{js,mjs}' 'test/**/*.{js,mjs}'",
     "precommit": "lint-staged",
     "version": "auto-changelog -p && auto-authors && git add CHANGELOG.md AUTHORS.md",
     "test": "node -r esm test/index.mjs",
