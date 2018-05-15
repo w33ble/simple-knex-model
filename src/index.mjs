@@ -1,35 +1,17 @@
 import Ajv from 'ajv';
 import { defineProp, getJoinQuery } from './utils.mjs';
 import { ModelError, DocumentError, RelationshipError } from './errors.mjs';
-import { HAS_ONE, HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
+import {
+  JOIN_MAP,
+  RELATIONSHIP_SCHEMA,
+  HAS_ONE,
+  HAS_MANY,
+  BELONGS_TO,
+  HAS_AND_BELONGS_TO_MANY,
+} from './constants.mjs';
 
 const modelRegistery = new Map();
 const ajv = new Ajv();
-
-const joinMap = {
-  inner: 'innerJoin',
-  left: 'leftJoin',
-  leftOuter: 'leftOuterJoin',
-  right: 'rightJoin',
-  rightOuter: 'rightOuterJoin',
-  fullOuter: 'fullOuterJoin',
-  cross: 'crossJoin',
-};
-
-const relationshipSchema = {
-  type: 'object',
-  required: ['model'],
-  properties: {
-    model: { type: 'string' },
-    relation: { type: 'string', enum: [HAS_ONE, HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY] },
-    joinType: { type: 'string', enum: Object.keys(joinMap) },
-    local: { type: 'string' },
-    remote: { type: 'string' },
-    joinTable: { type: 'string' },
-    joinLocal: { type: 'string' },
-    joinRemote: { type: 'string' },
-  },
-};
 
 export default class BaseModel {
   constructor(doc) {
@@ -83,7 +65,7 @@ export default class BaseModel {
       const def = this.relationships[name];
 
       // validate the relationship schema
-      if (!ajv.validate(relationshipSchema, def)) {
+      if (!ajv.validate(RELATIONSHIP_SCHEMA, def)) {
         showError(`Invalid schema for \`${name}\`, ${ajv.errors[0].message.replace(/'/g, '`')}`);
       }
 
@@ -154,7 +136,7 @@ export default class BaseModel {
         throw new RelationshipError(`No relation defined from ${relation} in model ${this.name}`);
       }
 
-      const joinFn = joinMap[def.joinType || 'inner'];
+      const joinFn = JOIN_MAP[def.joinType || 'inner'];
 
       return getJoinQuery({ query, joinFn, def, remoteModel, localModel: this });
     }, this.query());
