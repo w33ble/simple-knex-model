@@ -1,3 +1,4 @@
+import { RelationshipError } from './errors.mjs';
 import { HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
 
 export const toSnakeCase = name =>
@@ -51,5 +52,5 @@ export function getJoinQuery({ query, joinFn, def, remoteModel, localModel }) {
     });
   }
 
-  throw new Error(`Unsupported relation type: ${def.relation}`);
+  throw new RelationshipError(`Unsupported relation type: ${def.relation}`);
 }

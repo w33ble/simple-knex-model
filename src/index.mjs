@@ -1,5 +1,6 @@
 import Ajv from 'ajv';
 import { defineProp, executeOnDef, getJoinQuery } from './utils.mjs';
+import { ModelError, DocumentError, RelationshipError } from './errors.mjs';
 import { HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
 
 const modelRegistery = new Map();
@@ -34,7 +35,7 @@ export default class BaseModel {
   constructor(doc) {
     // validate model configuration
     const { valid, errors } = this.constructor.isValid;
-    if (!valid) throw new Error(errors[0]);
+    if (!valid) throw new ModelError(errors[0]);
 
     // register local properties
     defineProp(this, '$knex', { value: this.constructor.$knex });
@@ -53,7 +54,7 @@ export default class BaseModel {
 
     const addError = msg => {
       result.valid = false;
-      result.errors.push(`Model failure, ${msg}: ${this.name}`);
+      result.errors.push(new ModelError(`Model failure, ${msg}: ${this.name}`));
     };
 
     // check for required definitions
@@ -67,7 +68,7 @@ export default class BaseModel {
 
   static validateRelationships() {
     const showError = msg => {
-      throw new Error(`Relationship error in ${this.name}: ${msg}`);
+      throw new RelationshipError(`Relationship error in ${this.name}: ${msg}`);
     };
 
     // check model relationships
@@ -120,7 +121,7 @@ export default class BaseModel {
     this.registry = registry;
 
     // keep track of the model
-    if (this.registry.has(this.name)) throw new Error(`Model already registered: ${this.name}`);
+    if (this.registry.has(this.name)) throw new ModelError(`Model already registered: ${this.name}`);
     this.registry.set(this.name, this);
   }
 
@@ -141,7 +142,7 @@ export default class BaseModel {
       const remoteModel = modelRegistery.get(def.model);
 
       if (!def) {
-        throw new Error(`No relation defined from ${relation} in model ${this.name}`);
+        throw new RelationshipError(`No relation defined from ${relation} in model ${this.name}`);
       }
 
       const joinFn = joinMap[def.joinType || 'inner'];
@@ -173,7 +174,7 @@ export default class BaseModel {
         const { dataPath, message } = errors[0];
         const path = dataPath.length ? `\`${dataPath.replace(/^\./, '')}\` ` : '';
 
-        throw new Error(`document ${path}${message.replace(/'/g, '`')}`);
+        throw new DocumentError(`document ${path}${message.replace(/'/g, '`')}`);
       }
     }
 
