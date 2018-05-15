@@ -18,11 +18,6 @@ export function defineProp(obj, prop, config = {}) {
   });
 }
 
-export function executeOnDef(child, method, ...args) {
-  if (typeof child[method] === 'function') return child[method](...args);
-  return null;
-}
-
 export function getJoinQuery({ query, joinFn, def, remoteModel, localModel }) {
   if (def.relation === HAS_MANY || def.relation === HAS_ONE) {
     const left = `${remoteModel.tableName}.${def.remote || `${toSnakeCase(localModel.name)}_id`}`;

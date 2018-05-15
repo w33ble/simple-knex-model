@@ -1,5 +1,5 @@
 import Ajv from 'ajv';
-import { defineProp, executeOnDef, getJoinQuery } from './utils.mjs';
+import { defineProp, getJoinQuery } from './utils.mjs';
 import { ModelError, DocumentError, RelationshipError } from './errors.mjs';
 import { HAS_ONE, HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
 
@@ -42,8 +42,12 @@ export default class BaseModel {
 
     // keep the doc instance
     this.doc = doc;
+    this.execHook = (method, ...args) => {
+      if (typeof this.constructor[method] === 'function') return this.constructor[method](...args);
+      return null;
+    };
 
-    executeOnDef(this.constructor, 'onCreate', this.doc);
+    this.execHook('onCreate', this.doc);
   }
 
   static get isValid() {
@@ -131,7 +135,7 @@ export default class BaseModel {
   }
 
   static query() {
-    return this.$knex(this.tableName);
+    return this.$knex.from(this.tableName);
   }
 
   static queryById(id) {
@@ -169,8 +173,7 @@ export default class BaseModel {
   async save() {
     const { jsonSchema, tableName, primaryKey, validate } = this.constructor;
 
-    const schema =
-      executeOnDef(this.constructor, 'beforeValidate', { ...jsonSchema }, this.doc) || jsonSchema;
+    const schema = this.execHook('beforeValidate', { ...jsonSchema }, this.doc) || jsonSchema;
 
     if (schema) {
       const { valid, errors } = validate(this.doc, { ...schema, type: 'object' });
@@ -183,7 +186,7 @@ export default class BaseModel {
       }
     }
 
-    executeOnDef(this.constructor, 'beforeSave', this.doc);
+    this.execHook('beforeSave', this.doc);
 
     await this.$knex(tableName).insert(this.doc);
 
