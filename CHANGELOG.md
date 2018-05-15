@@ -1,5 +1,10 @@
 ### Changelog
 
+#### [v0.3.0](https://github.com/w33ble/simple-knex-model/compare/v0.2.1...v0.3.0) (14 May 2018)
+- feat: auto-resolve relationship table and field names [`#2`](https://github.com/w33ble/simple-knex-model/issues/2)
+- feat: throw custom error types [`5ecc287`](https://github.com/w33ble/simple-knex-model/commit/5ecc2879dd3203df7da85e3244859bcde5706689)
+- feat: validate model name [`8c32380`](https://github.com/w33ble/simple-knex-model/commit/8c32380b2aeced11287474456a06de8000ca94d7)
+
 #### [v0.2.1](https://github.com/w33ble/simple-knex-model/compare/v0.2.0...v0.2.1) (10 May 2018)
 - feat: add validate method [`16a9eb1`](https://github.com/w33ble/simple-knex-model/commit/16a9eb13287bfdf8265c68b4b5cd0de6ed3b4198)
 
