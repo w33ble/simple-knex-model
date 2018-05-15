@@ -1,5 +1,13 @@
 import { HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
 
+export const toSnakeCase = name =>
+  name.trim().replace(/[A-Z]/g, (l, pos) => (pos === 0 ? l.toLowerCase() : `_${l.toLowerCase()}`));
+
+export const toCamelCase = name =>
+  `${name.charAt(0).toUpperCase()}${name
+    .slice(1)
+    .replace(/[\W_]+(.|$)/g, (l, m) => m.toUpperCase())}`;
+
 export function defineProp(obj, prop, config = {}) {
   Object.defineProperty(obj, prop, {
     enumerable: false,
@@ -17,25 +25,28 @@ export function executeOnDef(child, method, ...args) {
 export function getJoinQuery({ query, joinFn, def, remoteModel, localModel }) {
   if (def.relation === HAS_MANY) {
     // TODO: check that remote is defined in validateRelationships
-    const left = `${remoteModel.tableName}.${def.remote}`;
+    const left = `${remoteModel.tableName}.${def.remote || `${toSnakeCase(localModel.name)}_id`}`;
     const right = `${localModel.tableName}.${def.local || localModel.primaryKey}`;
     return query[joinFn](remoteModel.tableName, { [left]: right });
   }
 
   if (def.relation === BELONGS_TO) {
     // TODO: check that local is defined in validateRelationships
-    const left = `${localModel.tableName}.${def.local}`;
+    const left = `${localModel.tableName}.${def.local || `${toSnakeCase(remoteModel.name)}_id`}`;
     const right = `${remoteModel.tableName}.${def.remote || remoteModel.primaryKey}`;
     return query[joinFn](remoteModel.tableName, { [left]: right });
   }
 
   if (def.relation === HAS_AND_BELONGS_TO_MANY) {
     // TODO: check that joinTable, joinLocal, and joinRemote are defined in validateRelationships
+    const joinTable =
+      def.joinTable || [localModel.tableName, remoteModel.tableName].sort().join('_');
+
     const left = `${localModel.tableName}.${def.local || localModel.primaryKey}`;
-    const leftJoin = `${def.joinTable}.${def.joinLocal}`;
+    const leftJoin = `${joinTable}.${def.joinLocal || `${toSnakeCase(localModel.name)}_id`}`;
     const right = `${remoteModel.tableName}.${def.remote || remoteModel.primaryKey}`;
-    const rightJoin = `${def.joinTable}.${def.joinRemote}`;
-    return query[joinFn](def.joinTable, { [left]: leftJoin })[joinFn](remoteModel.tableName, {
+    const rightJoin = `${joinTable}.${def.joinRemote || `${toSnakeCase(remoteModel.name)}_id`}`;
+    return query[joinFn](joinTable, { [left]: leftJoin })[joinFn](remoteModel.tableName, {
       [right]: rightJoin,
     });
   }
