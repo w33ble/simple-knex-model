@@ -121,7 +121,8 @@ export default class BaseModel {
     this.registry = registry;
 
     // keep track of the model
-    if (this.registry.has(this.name)) throw new ModelError(`Model already registered: ${this.name}`);
+    if (this.registry.has(this.name))
+      throw new ModelError(`Model already registered: ${this.name}`);
     this.registry.set(this.name, this);
   }
 

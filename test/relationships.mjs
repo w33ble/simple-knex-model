@@ -1,8 +1,9 @@
 import test from 'tape';
 import BaseModel from '..';
+import { RelationshipError } from '../src/errors.mjs';
 
 test('throws without relationships', t => {
-  t.plan(1);
+  t.plan(2);
 
   class TestModel extends BaseModel {
     static get tableName() {
@@ -14,13 +15,21 @@ test('throws without relationships', t => {
     () => {
       TestModel.validateRelationships();
     },
+    RelationshipError,
+    'throws a RelationshipError'
+  );
+
+  t.throws(
+    () => {
+      TestModel.validateRelationships();
+    },
     /Relationship error in TestModel: no relationships defined/,
     'has expected error message'
   );
 });
 
 test('throws on missing model', t => {
-  t.plan(1);
+  t.plan(2);
 
   const reg = new Map();
 
@@ -42,13 +51,21 @@ test('throws on missing model', t => {
     () => {
       MissingModel.validateRelationships();
     },
+    RelationshipError,
+    'throws a RelationshipError'
+  );
+
+  t.throws(
+    () => {
+      MissingModel.validateRelationships();
+    },
     /Relationship error in MissingModel: Invalid schema for `users`, should have required property `model`/,
     'has expected error message'
   );
 });
 
 test('throws on invalid model', t => {
-  t.plan(1);
+  t.plan(2);
 
   const reg = new Map();
 
@@ -73,13 +90,21 @@ test('throws on invalid model', t => {
     () => {
       FailingModelRelationship.validateRelationships();
     },
+    RelationshipError,
+    'throws a RelationshipError'
+  );
+
+  t.throws(
+    () => {
+      FailingModelRelationship.validateRelationships();
+    },
     /Relationship error in FailingModelRelationship: Model `Nope` not in registry, for field `users`/,
     'has expected error message'
   );
 });
 
 test('throws on missing relation type', t => {
-  t.plan(1);
+  t.plan(2);
 
   const reg = new Map();
 
@@ -106,6 +131,14 @@ test('throws on missing relation type', t => {
 
   ValidModel.register(reg);
   InvalidRelation.register(reg);
+
+  t.throws(
+    () => {
+      InvalidRelation.validateRelationships();
+    },
+    RelationshipError,
+    'throws a RelationshipError'
+  );
 
   t.throws(
     () => {

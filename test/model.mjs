@@ -1,30 +1,37 @@
 import test from 'tape';
 import BaseModel from '..';
+import { ModelError, DocumentError } from '../src/errors.mjs';
 
 test('invalid without table name', t => {
-  t.plan(3);
+  t.plan(4);
 
   class InvalidModel extends BaseModel {}
   const { valid, errors } = InvalidModel.isValid;
 
   t.notOk(valid, 'is invalid');
   t.ok(errors.length >= 1, 'has at least 1 error');
-  t.equal(errors[0], 'Model failure, `tableName` is required: InvalidModel', 'fails on tableName');
+  t.ok(errors[0] instanceof ModelError, 'is a model error');
+  t.equal(
+    errors[0].message,
+    'Model failure, `tableName` is required: InvalidModel',
+    'fails on tableName'
+  );
 });
 
 test('invalid with incorrect name', t => {
-  t.plan(3);
+  t.plan(4);
 
   class invalidModel extends BaseModel {}
   const { valid, errors } = invalidModel.isValid;
 
   t.notOk(valid, 'is invalid');
   t.ok(errors.length >= 1, 'has at least 1 error');
-  t.equal(errors[0], 'Model failure, Model class name should be capitalized: invalidModel');
+  t.ok(errors[0] instanceof ModelError, 'is a model error');
+  t.equal(errors[0].message, 'Model failure, Model class name should be capitalized: invalidModel');
 });
 
 test('invalid with incorrect name', t => {
-  t.plan(3);
+  t.plan(4);
 
   // eslint-disable-next-line camelcase
   class Invalid_Model extends BaseModel {}
@@ -32,7 +39,11 @@ test('invalid with incorrect name', t => {
 
   t.notOk(valid, 'is invalid');
   t.ok(errors.length >= 1, 'has at least 1 error');
-  t.equal(errors[0], 'Model failure, Model class name should only contain letters: Invalid_Model');
+  t.ok(errors[0] instanceof ModelError, 'is a model error');
+  t.equal(
+    errors[0].message,
+    'Model failure, Model class name should only contain letters: Invalid_Model'
+  );
 });
 
 test('valid with only name', t => {
@@ -50,7 +61,7 @@ test('valid with only name', t => {
 });
 
 test('save validates', t => {
-  t.plan(4);
+  t.plan(7);
 
   class SaveModel extends BaseModel {
     static get tableName() {
@@ -78,6 +89,7 @@ test('save validates', t => {
         .save()
         .then(() => t.fail('save should reject'))
         .catch(err => {
+          t.ok(err instanceof DocumentError, 'error is a DocumentError');
           t.equal(err.message, 'document should have required property `name`');
         });
     })
@@ -91,6 +103,7 @@ test('save validates', t => {
         .save()
         .then(() => t.fail('save should reject'))
         .catch(err => {
+          t.ok(err instanceof DocumentError, 'error is a DocumentError');
           t.equal(err.message, 'document `name` should NOT be shorter than 6 characters');
         });
     })
@@ -104,6 +117,7 @@ test('save validates', t => {
         .save()
         .then(() => t.fail('save should reject'))
         .catch(err => {
+          t.ok(err instanceof DocumentError, 'error is a DocumentError');
           t.equal(err.message, 'document `email` should match format "email"');
         });
     })
