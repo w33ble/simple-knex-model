@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import { defineProp, executeOnDef, getJoinQuery } from './utils.mjs';
 import { ModelError, DocumentError, RelationshipError } from './errors.mjs';
-import { HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
+import { HAS_ONE, HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY } from './constants.mjs';
 
 const modelRegistery = new Map();
 const ajv = new Ajv();
@@ -21,7 +21,7 @@ const relationshipSchema = {
   required: ['model'],
   properties: {
     model: { type: 'string' },
-    relation: { type: 'string', enum: [HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY] },
+    relation: { type: 'string', enum: [HAS_ONE, HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY] },
     joinType: { type: 'string', enum: Object.keys(joinMap) },
     local: { type: 'string' },
     remote: { type: 'string' },
@@ -84,7 +84,7 @@ export default class BaseModel {
       }
 
       // only a limited number of relationship types are supported
-      if ([HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY].indexOf(def.relation) < 0) {
+      if ([HAS_ONE, HAS_MANY, BELONGS_TO, HAS_AND_BELONGS_TO_MANY].indexOf(def.relation) < 0) {
         showError(`Invalid relation for \`${name}\`, \`${def.relation}\` `);
       }
 
@@ -102,6 +102,10 @@ export default class BaseModel {
 
   static get primaryKey() {
     return 'id';
+  }
+
+  static get hasOne() {
+    return HAS_ONE;
   }
 
   static get hasMany() {
