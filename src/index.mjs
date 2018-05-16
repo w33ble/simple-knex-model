@@ -1,5 +1,5 @@
 import Ajv from 'ajv';
-import { defineProp, getJoinQuery } from './utils.mjs';
+import { defineProp, getJoinQuery, normalizeUpdateArgs } from './utils.mjs';
 import { ModelError, DocumentError, RelationshipError } from './errors.mjs';
 import {
   JOIN_MAP,
@@ -130,6 +130,12 @@ export default class BaseModel {
     // override update to attach custom hooks
     const { update } = qb;
     qb.update = async (...args) => {
+      if (this.jsonSchema) {
+        const { required, ...schema } = this.jsonSchema;
+        const { valid, errors } = this.validate(normalizeUpdateArgs(args), schema);
+        if (!valid) throw new DocumentError(errors);
+      }
+
       if (typeof this.beforeUpdate === 'function') {
         await this.beforeUpdate(...args);
       }

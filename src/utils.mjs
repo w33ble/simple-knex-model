@@ -46,3 +46,8 @@ export function getJoinQuery({ query, joinFn, def, remoteModel, localModel }) {
 
   throw new RelationshipError(`Unsupported relation type: ${def.relation}`);
 }
+
+export function normalizeUpdateArgs(args) {
+  if (typeof args[0] === 'string') return { [args[0]]: args[1] };
+  return args[0];
+}
