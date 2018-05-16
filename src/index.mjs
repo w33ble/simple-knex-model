@@ -113,8 +113,10 @@ export default class BaseModel {
     this.registry.set(this.name, this);
   }
 
+  // create a custom query builder with wrapped functions
   static queryBuilder() {
-    // create a custom query builder with wrapped functions
+    if (typeof this.$knex !== 'function') throw new ModelError('knex instance not provided');
+
     const qb = this.$knex.queryBuilder();
 
     // override insert to attach custom hooks

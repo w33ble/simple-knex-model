@@ -61,7 +61,7 @@ test('valid with only name', t => {
 });
 
 test('save validates', t => {
-  t.plan(7);
+  t.plan(8);
 
   class SaveModel extends BaseModel {
     static get tableName() {
@@ -132,7 +132,8 @@ test('save validates', t => {
         .then(() => t.fail('save should reject'))
         .catch(err => {
           // this failure means validation passed, but we haven't set up knex
-          t.equal(err.message, 'this.$knex is not a function');
+          t.ok(err instanceof ModelError, 'error is ModelError');
+          t.equal(err.message, 'knex instance not provided');
         });
     })
     .catch(err => t.error(err));
