@@ -170,10 +170,10 @@ export default class BaseModel {
 
     this.execHook('beforeSave', this.doc);
 
-    await this.$knex(tableName).insert(this.doc);
+    const result = await this.$knex(tableName).insert(this.doc);
 
     return this.$knex(tableName)
-      .where({ [primaryKey]: this.doc[primaryKey] })
+      .where({ [primaryKey]: this.doc[primaryKey] || result })
       .first();
   }
 }
