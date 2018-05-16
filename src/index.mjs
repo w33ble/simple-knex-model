@@ -131,7 +131,10 @@ export default class BaseModel {
     const { update } = qb;
     qb.update = async (...args) => {
       if (this.jsonSchema) {
-        const { required, ...schema } = this.jsonSchema;
+        const { required, ...baseSchema } = this.jsonSchema;
+        const modifedSchema = this.execHook('beforeValidate', { ...baseSchema }, this.doc);
+        const schema = modifedSchema != null ? modifedSchema : baseSchema;
+
         const { valid, errors } = this.validate(normalizeUpdateArgs(args), schema);
         if (!valid) throw new DocumentError(errors);
       }
@@ -186,7 +189,8 @@ export default class BaseModel {
   async save() {
     const { jsonSchema, tableName, primaryKey, validate } = this.constructor;
 
-    const schema = this.execHook('beforeValidate', { ...jsonSchema }, this.doc) || jsonSchema;
+    const modifedSchema = this.execHook('beforeValidate', { ...jsonSchema }, this.doc);
+    const schema = modifedSchema != null ? modifedSchema : jsonSchema;
 
     if (schema) {
       const { valid, errors } = validate(this.doc, { ...schema, type: 'object' });
