@@ -1,5 +1,14 @@
 ### Changelog
 
+#### [v0.4.0](https://github.com/w33ble/simple-knex-model/compare/v0.3.0...v0.4.0) (15 May 2018)
+- feat: validate on update [`#1`](https://github.com/w33ble/simple-knex-model/issues/1)
+- feat: add beforeUpdate hook [`#3`](https://github.com/w33ble/simple-knex-model/issues/3)
+- feat: change save hook to beforeCreate [`921eeb6`](https://github.com/w33ble/simple-knex-model/commit/921eeb60e31506ac3f976c1e3d1860de37776f2e)
+- feat: handle one-to-one relationships [`6c04ecd`](https://github.com/w33ble/simple-knex-model/commit/6c04ecdf8ee77e9c38dc5e75e03d5f9ba786c563)
+- fix: throw ModelError without knex instance [`cfdc8c5`](https://github.com/w33ble/simple-knex-model/commit/cfdc8c5b897d9ae2153eec6ccb6bc9b58167638c)
+- fix: call beforeValidate on update method [`d3d97e0`](https://github.com/w33ble/simple-knex-model/commit/d3d97e0e77ab9d9f7cad0aa1bf721e404ba77f00)
+- fix: return document without primary key value [`ddd5e8c`](https://github.com/w33ble/simple-knex-model/commit/ddd5e8caaa952d226a3d9076f32ab59c4dc1e5e2)
+
 #### [v0.3.0](https://github.com/w33ble/simple-knex-model/compare/v0.2.1...v0.3.0) (14 May 2018)
 - feat: auto-resolve relationship table and field names [`#2`](https://github.com/w33ble/simple-knex-model/issues/2)
 - feat: throw custom error types [`5ecc287`](https://github.com/w33ble/simple-knex-model/commit/5ecc2879dd3203df7da85e3244859bcde5706689)
