@@ -19,9 +19,6 @@ export default class BaseModel {
     const { valid, errors } = this.constructor.isValid;
     if (!valid) throw new ModelError(errors[0]);
 
-    // register local properties
-    defineProp(this, '$knex', { value: this.constructor.$knex });
-
     // keep the doc instance
     this.doc = doc;
     this.execHook = (method, ...args) => {
@@ -116,8 +113,25 @@ export default class BaseModel {
     this.registry.set(this.name, this);
   }
 
+  static queryBuilder() {
+    // create a custom query builder with wrapped functions
+    const qb = this.$knex.queryBuilder();
+
+    // override insert to attach custom hooks
+    const { insert } = qb;
+    qb.insert = async (...args) => {
+      if (typeof this.beforeCreate === 'function') {
+        await this.beforeCreate(...args);
+      }
+
+      return insert.call(qb, ...args);
+    };
+
+    return qb;
+  }
+
   static query() {
-    return this.$knex.from(this.tableName);
+    return this.queryBuilder().from(this.tableName);
   }
 
   static queryById(id) {
@@ -168,11 +182,16 @@ export default class BaseModel {
       }
     }
 
-    this.execHook('beforeSave', this.doc);
+    // save the document
+    const result = await this.constructor
+      .queryBuilder()
+      .from(tableName)
+      .insert(this.doc);
 
-    const result = await this.$knex(tableName).insert(this.doc);
-
-    return this.$knex(tableName)
+    // return the inserted document
+    return this.constructor
+      .queryBuilder()
+      .from(tableName)
       .where({ [primaryKey]: this.doc[primaryKey] || result })
       .first();
   }

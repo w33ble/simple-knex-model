@@ -240,7 +240,7 @@ Called when a new instance of the model is created. The `doc` object is passed b
 
 Called before the doc is validated against the defined schema. `jsonSchema` is a shallow clone of the schema defined on the model, and anything returned from this function will be used as the new schema. The `doc` object is passed by reference and can be mutated directly.
 
-#### `beforeSave(doc)`
+#### `beforeCreate(doc)`
 
 Called after the validation but before the document is written to the database. The `doc` object is passed by reference and can be mutated directly.
 
