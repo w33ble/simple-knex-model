@@ -30,6 +30,18 @@ class CustomError extends Error {
 
 export class ModelError extends CustomError {}
 
-export class DocumentError extends CustomError {}
+export class DocumentError extends CustomError {
+  constructor(errors) {
+    const error = Array.isArray(errors) ? errors[0] : errors;
+
+    const { dataPath, message } = error;
+    const path = dataPath.length ? `\`${dataPath.replace(/^\./, '')}\` ` : '';
+    const errMessage = `document ${path}${message.replace(/'/g, '`')}`;
+
+    super(errMessage);
+    this.message = errMessage;
+    this.allErrors = errors;
+  }
+}
 
 export class RelationshipError extends CustomError {}

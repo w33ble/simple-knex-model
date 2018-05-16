@@ -11,7 +11,6 @@ import {
 } from './constants.mjs';
 
 const modelRegistery = new Map();
-const ajv = new Ajv();
 
 export default class BaseModel {
   constructor(doc) {
@@ -62,6 +61,7 @@ export default class BaseModel {
       const def = this.relationships[name];
 
       // validate the relationship schema
+      const ajv = new Ajv();
       if (!ajv.validate(RELATIONSHIP_SCHEMA, def)) {
         showError(`Invalid schema for \`${name}\`, ${ajv.errors[0].message.replace(/'/g, '`')}`);
       }
@@ -169,6 +169,7 @@ export default class BaseModel {
   static validate(data, schema) {
     const checkSchema = schema || this.jsonSchema;
 
+    const ajv = new Ajv();
     if (!ajv.validate({ ...checkSchema, type: 'object' }, data)) {
       return { valid: false, errors: ajv.errors };
     }
@@ -183,13 +184,7 @@ export default class BaseModel {
 
     if (schema) {
       const { valid, errors } = validate(this.doc, { ...schema, type: 'object' });
-
-      if (!valid) {
-        const { dataPath, message } = errors[0];
-        const path = dataPath.length ? `\`${dataPath.replace(/^\./, '')}\` ` : '';
-
-        throw new DocumentError(`document ${path}${message.replace(/'/g, '`')}`);
-      }
+      if (!valid) throw new DocumentError(errors);
     }
 
     // save the document
