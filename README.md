@@ -240,9 +240,13 @@ Called when a new instance of the model is created. The `doc` object is passed b
 
 Called before the doc is validated against the defined schema. `jsonSchema` is a shallow clone of the schema defined on the model, and anything returned from this function will be used as the new schema. The `doc` object is passed by reference and can be mutated directly.
 
-#### `beforeCreate(doc)`
+#### `beforeCreate(doc, [returning])`
 
-Called after the validation but before the document is written to the database. The `doc` object is passed by reference and can be mutated directly.
+Called after the validation but before the document is written to the database. The `doc` object is passed by reference and can be mutated directly. All arguments from [`.insert()`](http://knexjs.org/#Builder-insert) are passed directly. This method can return a Promise, and the query won't execute until the Promise resolves.
+
+#### `beforeUpdate(doc, [returning]) / beforeUpdate(key, value, [returning])`
+
+Called after the validation but before the document update query is executed. If `doc` object is provided, is it passed by reference and can be mutated directly. All arguments from [`.update()`](http://knexjs.org/#Builder-update) are passed directly, so you should check what you get. This method can return a Promise, and the query won't execute until the Promise resolves.
 
 #### License
 

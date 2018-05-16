@@ -127,6 +127,16 @@ export default class BaseModel {
       return insert.call(qb, ...args);
     };
 
+    // override update to attach custom hooks
+    const { update } = qb;
+    qb.update = async (...args) => {
+      if (typeof this.beforeUpdate === 'function') {
+        await this.beforeUpdate(...args);
+      }
+
+      return update.call(qb, ...args);
+    };
+
     return qb;
   }
 
