@@ -12,6 +12,16 @@ import {
 
 const modelRegistery = new Map();
 
+const maybeExec = (fn, ...args) => {
+  if (typeof fn === 'function') return fn(...args);
+  return null;
+};
+
+const getValue = (left, right) => {
+  if (left != null) return left;
+  return right;
+};
+
 export default class BaseModel {
   constructor(doc) {
     // validate model configuration
@@ -20,12 +30,7 @@ export default class BaseModel {
 
     // keep the doc instance
     this.doc = doc;
-    this.execHook = (method, ...args) => {
-      if (typeof this.constructor[method] === 'function') return this.constructor[method](...args);
-      return null;
-    };
-
-    this.execHook('onCreate', this.doc);
+    maybeExec(this.constructor.onCreate, this.doc);
   }
 
   static get isValid() {
@@ -122,6 +127,16 @@ export default class BaseModel {
     // override insert to attach custom hooks
     const { insert } = qb;
     qb.insert = async (...args) => {
+      if (this.jsonSchema) {
+        const schema = getValue(
+          maybeExec(this.beforeValidate, { ...this.jsonSchema }, this.doc),
+          this.jsonSchema
+        );
+
+        const { valid, errors } = this.validate(normalizeUpdateArgs(args), schema);
+        if (!valid) throw new DocumentError(errors);
+      }
+
       if (typeof this.beforeCreate === 'function') {
         await this.beforeCreate(...args);
       }
@@ -134,8 +149,10 @@ export default class BaseModel {
     qb.update = async (...args) => {
       if (this.jsonSchema) {
         const { required, ...baseSchema } = this.jsonSchema;
-        const modifedSchema = this.execHook('beforeValidate', { ...baseSchema }, this.doc);
-        const schema = modifedSchema != null ? modifedSchema : baseSchema;
+        const schema = getValue(
+          maybeExec(this.beforeValidate, { ...baseSchema }, this.doc),
+          baseSchema
+        );
 
         const { valid, errors } = this.validate(normalizeUpdateArgs(args), schema);
         if (!valid) throw new DocumentError(errors);
@@ -189,15 +206,7 @@ export default class BaseModel {
   }
 
   async save() {
-    const { jsonSchema, tableName, primaryKey, validate } = this.constructor;
-
-    const modifedSchema = this.execHook('beforeValidate', { ...jsonSchema }, this.doc);
-    const schema = modifedSchema != null ? modifedSchema : jsonSchema;
-
-    if (schema) {
-      const { valid, errors } = validate(this.doc, { ...schema, type: 'object' });
-      if (!valid) throw new DocumentError(errors);
-    }
+    const { tableName, primaryKey } = this.constructor;
 
     // save the document
     const result = await this.constructor
