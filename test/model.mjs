@@ -1,6 +1,28 @@
-import test from 'tape';
+import test from 'tapped';
+import knex from 'knex';
 import BaseModel from '..';
-import { ModelError, DocumentError } from '../src/errors.mjs';
+import { ModelError } from '../src/errors.mjs';
+
+test.setConcurrency(1);
+
+const $k = knex({
+  client: 'sqlite3',
+  connection: { filename: ':memory:' },
+  useNullAsDefault: true,
+});
+
+// const shouldReject = (t, fn, regex, msg = 'should reject') =>
+//   fn().then(
+//     () => t.fail('function should reject'),
+//     e =>
+//       t.throws(
+//         () => {
+//           throw e;
+//         },
+//         regex,
+//         msg
+//       )
+//   );
 
 test('invalid without table name', t => {
   t.plan(4);
@@ -60,81 +82,54 @@ test('valid with only name', t => {
   t.ok(errors.length === 0, 'no error');
 });
 
-test('save validates', t => {
-  t.plan(8);
+// from here on down, order matters
+test('db setup', async t => {
+  BaseModel.knex($k);
 
-  class SaveModel extends BaseModel {
+  await $k.schema.createTable('users', table => {
+    table.increments();
+    table.string('name');
+    table.timestamps();
+  });
+
+  t.pass('databaset setup complete');
+});
+
+test('validates on insert', async t => {
+  t.plan(2);
+
+  class User extends BaseModel {
     static get tableName() {
-      return 'test_table';
+      return 'users';
     }
 
     static get jsonSchema() {
       return {
+        type: 'object',
         required: ['name'],
         properties: {
-          name: { type: 'string', minLength: 6 },
-          email: { type: 'string', format: 'email' },
+          name: { type: 'string', maxLength: 12 },
         },
       };
     }
   }
 
-  Promise.resolve()
-    .then(() => {
-      const user = new SaveModel({
-        email: 'mail@email.co',
-      });
+  try {
+    await User.query().insert({ name: 'some string that is too long' });
+    t.fail('invalid documents should reject');
+  } catch (err) {
+    t.ok(
+      /document `name` should NOT be longer than 12 characters/.test(err),
+      'rejects with expected error'
+    );
+  }
 
-      return user
-        .save()
-        .then(() => t.fail('save should reject'))
-        .catch(err => {
-          t.ok(err instanceof DocumentError, 'error is a DocumentError');
-          t.equal(err.message, 'document should have required property `name`');
-        });
-    })
-    .then(() => {
-      const user = new SaveModel({
-        name: 'boots',
-        email: 'mail@email.co',
-      });
+  const [id] = await User.query().insert({ name: 'short string' });
+  const row = await User.queryById(id).first();
+  t.equal(row.name, 'short string', 'inserts valid record');
+});
 
-      return user
-        .save()
-        .then(() => t.fail('save should reject'))
-        .catch(err => {
-          t.ok(err instanceof DocumentError, 'error is a DocumentError');
-          t.equal(err.message, 'document `name` should NOT be shorter than 6 characters');
-        });
-    })
-    .then(() => {
-      const user = new SaveModel({
-        name: 'boots and cats',
-        email: 'mail',
-      });
-
-      return user
-        .save()
-        .then(() => t.fail('save should reject'))
-        .catch(err => {
-          t.ok(err instanceof DocumentError, 'error is a DocumentError');
-          t.equal(err.message, 'document `email` should match format "email"');
-        });
-    })
-    .then(() => {
-      const user = new SaveModel({
-        name: 'boots and cats',
-        email: 'mail@email.co',
-      });
-
-      return user
-        .save()
-        .then(() => t.fail('save should reject'))
-        .catch(err => {
-          // this failure means validation passed, but we haven't set up knex
-          t.ok(err instanceof ModelError, 'error is ModelError');
-          t.equal(err.message, 'knex instance not provided');
-        });
-    })
-    .catch(err => t.error(err));
+test('db teardown', async t => {
+  await $k('users').truncate();
+  t.pass('database teardown complete');
 });

@@ -1,4 +1,4 @@
-import test from 'tape';
+import test from 'tapped';
 import BaseModel from '..';
 
 test('validate works without schema', t => {

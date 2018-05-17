@@ -1,4 +1,4 @@
-import test from 'tape';
+import test from 'tapped';
 import BaseModel from '..';
 import { RelationshipError } from '../src/errors.mjs';
 

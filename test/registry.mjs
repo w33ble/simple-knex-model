@@ -1,4 +1,4 @@
-import test from 'tape';
+import test from 'tapped';
 import BaseModel from '..';
 
 test('throws on duplicate names', t => {

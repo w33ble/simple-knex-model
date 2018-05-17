@@ -1,4 +1,4 @@
-import test from 'tape';
+import test from 'tapped';
 import * as utils from '../src/utils.mjs';
 
 test('toSnakeCase', t => {
