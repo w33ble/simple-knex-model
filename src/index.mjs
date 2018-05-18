@@ -12,8 +12,8 @@ import {
 
 const modelRegistery = new Map();
 
-const maybeExec = (fn, ...args) => {
-  if (typeof fn === 'function') return fn(...args);
+const maybeExec = (bindTo, fn, ...args) => {
+  if (typeof fn === 'function') return fn.bind(bindTo)(...args);
   return null;
 };
 
@@ -30,7 +30,7 @@ export default class BaseModel {
 
     // keep the doc instance
     this.doc = doc;
-    maybeExec(this.constructor.onCreate, this.doc);
+    maybeExec(this.constructor, this.constructor.onCreate, this.doc);
   }
 
   static get isValid() {
@@ -129,7 +129,7 @@ export default class BaseModel {
     qb.insert = async (...args) => {
       if (this.jsonSchema) {
         const schema = getValue(
-          maybeExec(this.beforeValidate, { ...this.jsonSchema }, this.doc),
+          maybeExec(this, this.beforeValidate, { ...this.jsonSchema }, ...args),
           this.jsonSchema
         );
 
@@ -150,7 +150,7 @@ export default class BaseModel {
       if (this.jsonSchema) {
         const { required, ...baseSchema } = this.jsonSchema;
         const schema = getValue(
-          maybeExec(this.beforeValidate, { ...baseSchema }, this.doc),
+          maybeExec(this, this.beforeValidate, { ...baseSchema }, ...args),
           baseSchema
         );
 
