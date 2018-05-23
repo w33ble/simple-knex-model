@@ -127,10 +127,7 @@ export default class BaseModel {
         if (!valid) throw new DocumentError(errors);
       }
 
-      if (typeof this.beforeCreate === 'function') {
-        await this.beforeCreate(...args);
-      }
-
+      await maybeExec(this, this.beforeCreate, ...args);
       return insert.call(qb, ...args);
     };
 
@@ -148,10 +145,7 @@ export default class BaseModel {
         if (!valid) throw new DocumentError(errors);
       }
 
-      if (typeof this.beforeUpdate === 'function') {
-        await this.beforeUpdate(...args);
-      }
-
+      await maybeExec(this, this.beforeUpdate, ...args);
       return update.call(qb, ...args);
     };
 
