@@ -15,6 +15,7 @@ const dbSetup = async () => {
   return $k.schema.createTable('users', table => {
     table.increments();
     table.string('name');
+    table.string('occupation');
     table.timestamps();
   });
 };
@@ -109,5 +110,88 @@ suite('validates on update', test => {
     const updated = await User.queryById(row.id).first();
 
     t.equal(updated.name, 'just right', 'updates valid record');
+  });
+});
+
+suite('beforeCreate hook', test => {
+  test('db setup', async () => dbSetup());
+
+  test('runs on insert', async t => {
+    t.plan(3);
+    let runCount = 0;
+
+    class User extends BaseModel {
+      static get tableName() {
+        return 'users';
+      }
+
+      static get jsonSchema() {
+        return {
+          type: 'object',
+          required: ['name'],
+          properties: {
+            name: { type: 'string', maxLength: 12 },
+            occupation: { type: 'string' },
+          },
+        };
+      }
+
+      static beforeCreate(doc) {
+        runCount += 1;
+        doc.occupation = 'juggler'; // eslint-disable-line no-param-reassign
+      }
+    }
+
+    await User.query().insert({ name: 'user' });
+    const row = await User.query().first();
+
+    t.equal(runCount, 1, 'beforeCreate was called');
+    t.equal(row.name, 'user', 'document has expected name');
+    t.equal(row.occupation, 'juggler', 'beforeCreate modifies document');
+  });
+});
+
+suite('beforeUpdate hook', test => {
+  test('db setup', async () => dbSetup());
+
+  test('runs on insert', async t => {
+    t.plan(3);
+    let runCount = 0;
+
+    class User extends BaseModel {
+      static get tableName() {
+        return 'users';
+      }
+
+      static get jsonSchema() {
+        return {
+          type: 'object',
+          required: ['name'],
+          properties: {
+            name: { type: 'string', maxLength: 12 },
+            occupation: { type: 'string' },
+          },
+        };
+      }
+
+      static beforeUpdate(doc) {
+        runCount += 1;
+        doc.occupation = 'juggler'; // eslint-disable-line no-param-reassign
+      }
+    }
+
+    await User.query().insert({ name: 'user' });
+    const row = await User.query().first();
+
+    await User.query()
+      .where({ id: row.id })
+      .update({
+        name: 'rad dude',
+      });
+    const updated = await User.query().first();
+
+    t.equal(runCount, 1, 'beforeUpdate was called');
+    t.equal(updated.name, 'rad dude', 'document has updated name');
+    t.equal(updated.occupation, 'juggler', 'beforeUpdate modifies document');
   });
 });

@@ -1,3 +1,4 @@
+import './setup.mjs';
 import './utils.mjs';
 import './registry.mjs';
 import './relationships.mjs';
