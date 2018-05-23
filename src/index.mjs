@@ -23,16 +23,6 @@ const getValue = (left, right) => {
 };
 
 export default class BaseModel {
-  constructor(doc) {
-    // validate model configuration
-    const { valid, errors } = this.constructor.isValid;
-    if (!valid) throw new ModelError(errors[0]);
-
-    // keep the doc instance
-    this.doc = doc;
-    maybeExec(this.constructor, this.constructor.onCreate, this.doc);
-  }
-
   static get isValid() {
     const result = {
       valid: true,
@@ -203,22 +193,5 @@ export default class BaseModel {
     }
 
     return { valid: true, errors: [] };
-  }
-
-  async save() {
-    const { tableName, primaryKey } = this.constructor;
-
-    // save the document
-    const result = await this.constructor
-      .queryBuilder()
-      .from(tableName)
-      .insert(this.doc);
-
-    // return the inserted document
-    return this.constructor
-      .queryBuilder()
-      .from(tableName)
-      .where({ [primaryKey]: this.doc[primaryKey] || result })
-      .first();
   }
 }
