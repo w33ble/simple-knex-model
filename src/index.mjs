@@ -83,9 +83,9 @@ export default class BaseModel {
     });
   }
 
-  static knex(value) {
-    if (this.$knex) return;
-    defineProp(this, '$knex', { value });
+  static knex(value, force = false) {
+    if (this.$knex && !force) return;
+    defineProp(this, '$knex', { writable: true, value });
   }
 
   static get primaryKey() {
