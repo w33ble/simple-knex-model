@@ -68,7 +68,7 @@
     "knex": "^0.14.0"
   },
   "devDependencies": {
-    "@w33ble/npm-auto-tools": "^0.1.0",
+    "@w33ble/npm-auto-tools": "*",
     "eslint": "^4.9.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-config-prettier": "^2.9.0",
